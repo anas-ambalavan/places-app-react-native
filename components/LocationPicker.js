@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   StyleSheet,
@@ -9,11 +9,20 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 
+import MapPreview from "./MapPreview";
 import Colors from "../constants/Colors";
 
 const LocationPicker = (props) => {
   const [isFetching, setisFetching] = useState(false);
   const [pickedLocation, setPickedLocation] = useState();
+
+  const mapPickedLocation = props.navigation.getParam("pickedLocation");
+
+  useEffect(() => {
+    if (mapPickedLocation) {
+      setPickedLocation(mapPickedLocation);
+    }
+  }, [mapPickedLocation]);
 
   const verifyPermissions = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -52,20 +61,36 @@ const LocationPicker = (props) => {
     }
     setisFetching(false);
   };
+
+  const pickOnMapHandler = () => {
+    props.navigation.navigate("Map");
+  };
+
   return (
     <View style={styles.locationPicker}>
-      <View style={styles.mapPreview}>
+      <MapPreview
+        onPress={pickOnMapHandler}
+        style={styles.mapPreview}
+        location={pickedLocation}
+      >
         {isFetching ? (
           <ActivityIndicator size="large" color={Colors.primary} />
         ) : (
           <Text>No Location chosen yet!</Text>
         )}
+      </MapPreview>
+      <View style={styles.actions}>
+        <Button
+          title="Get User Location"
+          color={Colors.primary}
+          onPress={getLocationHandler}
+        />
+        <Button
+          title="Pick on Map"
+          color={Colors.primary}
+          onPress={pickOnMapHandler}
+        />
       </View>
-      <Button
-        title="Get User Location"
-        color={Colors.primary}
-        onPress={getLocationHandler}
-      />
     </View>
   );
 };
@@ -82,7 +107,10 @@ const styles = StyleSheet.create({
     height: 150,
     borderWidth: 1,
     borderColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
   },
 });
